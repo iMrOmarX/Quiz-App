@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-giJF6kkoqNQ00vy+HMDP7azOuL0xtbfIcaT9wjKHr8RbDVddVHyTfAAsrekwKmP1" crossorigin="anonymous">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <title>Play</title>
+</head>
+
+
+<style>
+    
+</style>
+<body>
+    <header>
+        <h1>Quiz App</h1>
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav">
+                <li class="nav-item active">
+                <a class="nav-link" href="/play">Play</a>
+                </li>
+                <li class="nav-item">
+                <a class="nav-link" href="/addQuestion">Add Question</a>
+                </li>
+                <li class="nav-item">
+                <a class="nav-link" href="/leaderboards">Leaderboards</a>
+                </li>
+                
+            </ul>
+            </div>
+        </nav>
+    </header>
+    <form id="UserNameInput">
+        <label for="user_name">User Name</label>
+        <input type="text" name="user_name" id="user_name">
+        <button id="userButton" onclick="clickSubmit()">submit</button>
+    </form>
+    <div id="answers"></div>
+
+    <div id="timer"></div>
+</body>
+
+
+<script>
+    let name, questions,allAnswers, score = 0
+    let i = 0 ;
+    let TimedOut = false
+    let numberOfQuestions = 4;
+
+    const getName = () => {
+        name = $('#user_name').val()
+    }
+
+    function shuffle(array) {
+        array.sort(() => Math.random() - 0.5);
+    }
+
+    function showScore() {
+        let scoreObject = document.createElement('div')
+        scoreObject.innerHTML = "Your score is : " + score
+        document.querySelector('body').appendChild(scoreObject)
+        submitToLeaderboards()
+        let submitDiv = document.createElement('div')
+        submitDiv.innerHTML = "Name has been submitted"
+        document.querySelector('body').appendChild(submitDiv)
+
+        //Play Again 
+        let playAgainBtn = document.createElement('a')
+        playAgainBtn.id = 'PlayAgain'
+        playAgainBtn.innerHTML = "Play Again"
+        //playAgainBtn.addEventListener('click', fetchQuestions())
+        playAgainBtn.href = "/play"
+        document.querySelector('body').appendChild(playAgainBtn)
+
+    }
+
+    let play = (questions) => {
+        i = 0
+        showQuestion(questions)
+    }
+
+    function submitToLeaderboards() {
+        const user = {name: name , bestScore: score}
+        console.log(user)
+        fetch('/leaderboardsScore' , {
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            method:"POST",
+            body: JSON.stringify({name: name , bestScore: score})
+        }).then((res) => {
+            console.log(res)
+        }).catch((e) => {
+            console.log(e)
+        })
+
+        
+    }
+
+    let submitQuestionAnswer = async (id , isRight) => {
+        try {
+            await fetch('/answeredQuestion/' + id +'/' + isRight , {
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                method:"POST",
+            
+            })
+            console.log("Question has been updated")
+        }
+        catch(e) {
+            console.log(e)
+        }      
+    }
+
+    let goToNextQuestion = (questions) => {
+
+        let buttons = document.getElementsByClassName("ans")
+        len = buttons !== null ? buttons.length : 0
+
+        k = 0;
+        for(k; k < len; k++) {
+            buttons[k].disabled = true; 
+        }
+
+        if(i >= numberOfQuestions) {
+            let finished = document.createElement("div")
+            finished.innerHTML = "You have finished"
+            document.querySelector('body').appendChild(finished)
+            hideQuestion();
+            showScore()
+            return ;
+        }
+
+        setTimeout(() => {
+            hideQuestion();
+            showQuestion(questions)  
+        } , 1000)
+        
+    }
+
+    
+    let showQuestion = (questions) => {
+        allAnswers = questions[i].wrong_answers
+        allAnswers.push(questions[i].right_answer)
+        shuffle(allAnswers)
+
+        let qusetion = document.createElement('div')
+
+        qusetion.innerHTML = questions[i].question_text
+        qusetion.id = "question"
+        document.getElementById('answers').appendChild(qusetion)
+
+        let sec = 1000
+        let timer = setInterval(() => {
+            document.getElementById('timer').innerHTML= sec;
+            sec-= 1;
+            if (sec < 0 ) {
+                i++
+                goToNextQuestion(questions)
+                clearInterval(timer);
+            }
+        } , 10)
+
+
+
+        for(let j = 0; j < questions[i].numberOfAnswers; j++){
+            let answer = document.createElement('button')
+            
+            answer.innerHTML = allAnswers[j]
+
+            if(answer.innerHTML == questions[i].right_answer){
+                answer.id = "right"
+            }
+            
+           
+            answer.addEventListener("click" , () => {
+                if(answer.innerHTML == questions[i].right_answer){
+                    score += sec
+                    submitQuestionAnswer(questions[i]._id , 1)
+                }
+                else {
+                    submitQuestionAnswer(questions[i]._id , 0)
+                }
+                i++;
+
+                clearInterval(timer)
+                goToNextQuestion(questions)
+            })
+
+            answer.classList.add("ans")         
+            document.getElementById('answers').appendChild(answer)
+        }
+        
+    }
+
+    const hideQuestion = () => {
+        document.querySelector("#answers").innerHTML = "";
+    }
+
+    const fetchQuestions = () => {
+        fetch('/playapi').then((res) => {
+            return res.json()
+        }).then((result) => {
+            questions = result
+            play(questions)
+        }).catch((e) =>
+            console.log(e)
+        )
+    }
+    const clickSubmit = () => {
+        getName();
+        $('#UserNameInput').hide()
+
+        fetchQuestions()
+    }
+
+
+    $( document ).ready(function() {
+        $(document).on('submit', '#UserNameInput', function() {
+            return false;
+        });
+    });
+    
+    
+</script>
+</html>

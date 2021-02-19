@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-giJF6kkoqNQ00vy+HMDP7azOuL0xtbfIcaT9wjKHr8RbDVddVHyTfAAsrekwKmP1" crossorigin="anonymous">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <title>Quiz App</title>
+</head>
+
+
+<!-- When input is not complete it should warn you  -->
+<body>
+    <header>
+        <h1>Quiz App</h1>
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item active">
+                        <a class="nav-link" href="/play">Play</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/addQuestion">Add Question</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/leaderboards">Leaderboards</a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+    <h1>Question Add</h1>
+    <form>
+        <label>Creator</label>
+        <input type="text" id="creator">
+
+        <label for="question_text">Question</label>
+        <input type="text" name="question_text" id="question_text">
+
+        <label for="right_answer">Right Answer</label>
+        <input type="text" name="right_answer" id="right_answer">
+
+        <label for="wrong_answers_number">Number of Wrong Answers</label>
+        <select id="wrong_answers_number">
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3" selected>3</option>
+            <option value="4">4</option>
+        </select>
+        
+        <div id="wrong_answers"></div>
+
+        <input type="submit">
+    </form> 
+
+    
+</body>
+
+<script>
+    let form = document.querySelector('form')
+    let question_text = document.getElementById("question_text")
+    let wrong_answers = document.getElementById("wrong_answers")
+    let right_answer = document.getElementById("right_answer")
+    let creator = document.getElementById("creator")
+
+    let wrong_answers_number = 3;
+    
+    putWrongAnswersInput()
+
+    function putWrongAnswersInput() { // You can make it so that input doesn't go away when number is changed 
+        for(let i = 0; i < wrong_answers_number; i++){
+
+            let newInput = document.createElement("input")
+            newInput.className = "wrong_answer"
+            newInput.type = "text"
+            wrong_answers.appendChild(newInput)
+        }
+    }
+    
+
+    $('#wrong_answers_number').on('change', function() {
+        wrong_answers_number = this.value
+        wrong_answers.innerHTML = "";
+        putWrongAnswersInput();
+        
+    });
+
+    function wrongAnswersCollect() {
+        let wrong_answers = []
+        for(let i = 0; i < wrong_answers_number; i++){
+            wrong_answers.push(document.getElementsByClassName("wrong_answer")[i].value)
+        }
+        return wrong_answers
+    }
+    form.addEventListener('submit', ()=> {
+        let question = {
+            question_text: question_text.value,
+            creator: creator.value,
+            right_answer: right_answer.value,
+            wrong_answers: wrongAnswersCollect(),
+            numberOfAnswers: wrongAnswersCollect().length + 1
+        }
+        fetch('/addQuestion',{
+            headers: {
+                'Accept':'application/json',
+                'Content-Type': 'application/json'
+            },
+            method:"POST",
+            body: JSON.stringify(question)
+        }).then((res)=> {
+            console.log(res)
+        }).catch((error) => {
+            console.log(error)
+        })
+    })
+
+</script>
+</html>

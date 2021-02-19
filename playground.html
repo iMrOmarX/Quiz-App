@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Document</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+</head>
+
+<body>
+
+    <label>Name</label>
+<input type="text" name="name" />
+<select id="aioConceptName">
+    <option>choose io</option>
+    <option>roma</option>
+    <option>totti</option>
+</select>
+</body>
+
+
+<script > 
+    let element = document.getElementById("aioConceptName")
+    var option_user_selection = element.options[ element.selectedIndex ].text
+</script>
+</html>

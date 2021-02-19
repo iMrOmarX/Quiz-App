@@ -1,0 +1,29 @@
+back end 
+    authnitication for adding question 
+        send email if forget password 
+    add photo for question
+    insert users in a sorted way 
+    filter questions into : easy , normal , hard 
+        first ,get it from user. then after x plays of question make it depend on success ratio
+
+    leaderboard for questions added 
+        ratings for questions after finishing
+        implent these ratings into leaderboard to get a score for best question makers 
+        
+
+front end 
+    
+    authnitication 
+        if user is logged in , don't ask for user name to play 
+    add question
+        check if all input for question is valid
+        add photo for question 
+        put difficulty of question 
+    play 
+        put success ratio for question 
+        play again btn doesn't need to put user name again 
+
+    leaderboard for questions added 
+
+    
+    

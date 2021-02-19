@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-giJF6kkoqNQ00vy+HMDP7azOuL0xtbfIcaT9wjKHr8RbDVddVHyTfAAsrekwKmP1" crossorigin="anonymous">
+    <title>LeaderBoard</title>
+</head>
+<body>
+    <header>
+        <h1>Quiz App</h1>
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav">
+                <li class="nav-item active">
+                <a class="nav-link" href="/play">Play</a>
+                </li>
+                <li class="nav-item">
+                <a class="nav-link" href="/addQuestion">Add Question</a>
+                </li>
+                <li class="nav-item">
+                <a class="nav-link" href="/leaderboards">Leaderboards</a>
+                </li>
+                
+            </ul>
+            </div>
+        </nav>
+    </header>
+    
+    <table  class="table">
+        <thead>
+          <tr>
+            <th scope="col">#</th>
+            <th scope="col">Name</th>
+            <th scope="col">Best Score</th>
+          </tr>
+        </thead>
+        <tbody id="leaderboard-table">  
+        </tbody>
+    </table>
+    <button id="previous" disabled>Previous</button>
+    <button id="next">Next</button>
+</body>
+
+<script>
+    let page = 1 
+    let numberOfNames ;
+    const MAX_NAMES_PER_SITE = 10;
+    const getLeaderboards = async (p) => {
+        try {
+            const leaderboardjson = await fetch('/leaderboards-api/' + p, {
+            headers: {
+                'Accept':'application/json',
+                'Content-Type': 'application/json'
+            },
+            method: "GET"
+            })
+            const leaderboard = await leaderboardjson.json()
+            return leaderboard
+        } catch(e) {
+            console.log(e)
+        }
+        
+    }
+   
+    
+    const showLeaderboards = async (p) => {
+        document.getElementById("leaderboard-table").innerHTML = ""
+        const leaderboards = await getLeaderboards(p)
+        if (p == 1) {
+            numberOfNames = leaderboards[leaderboards.length - 1].userCount
+        }
+
+        for(let i = 0 ; i < MAX_NAMES_PER_SITE ; i++){
+            let row = document.createElement('tr')
+            let rowNumber = document.createElement('th')
+            rowNumber.scope = "row"
+            rowNumber.innerHTML = i + 1 + (MAX_NAMES_PER_SITE * (p -1 ))
+
+            let name = document.createElement('td')
+            name.innerHTML = leaderboards[i].name
+
+            let bestScore = document.createElement('td')
+            bestScore.innerHTML = leaderboards[i].bestScore
+            row.appendChild(rowNumber)
+            row.appendChild(name)
+            row.appendChild(bestScore)
+
+            document.getElementById("leaderboard-table").appendChild(row)
+        }
+    }
+    showLeaderboards(page)
+
+    document.getElementById('next').addEventListener('click', () =>{
+        page++;
+        document.getElementById("previous").disabled = false
+        showLeaderboards(page)
+        if(numberOfNames / MAX_NAMES_PER_SITE <= page){
+            document.getElementById("next").disabled = true
+        }
+    })
+
+    document.getElementById('previous').addEventListener("click", () => {
+        page--;
+        if(numberOfNames / MAX_NAMES_PER_SITE > page){
+            document.getElementById("next").disabled = false
+        }
+        showLeaderboards(page)
+        if(page == 1)
+            document.getElementById("previous").disabled = true
+    })
+
+</script>
+</html>
